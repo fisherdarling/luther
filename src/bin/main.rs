@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use luther::transition_table::*;
 use structopt::StructOpt;
 
 use std::path::PathBuf;
@@ -24,6 +25,8 @@ pub struct Args {
 fn main() {
     let args = Args::from_args();
     println!("{:?}", args);
-}
 
-fn read_input_file(input_file_name: &str) {}
+    let temp_input_file_name = "some_tt.tt";
+
+    let transition_table = TransitionTable::from_file(&temp_input_file_name).unwrap();
+}

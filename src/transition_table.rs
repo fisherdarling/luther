@@ -1,6 +1,32 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 pub struct TransitionTable {
     rows: Vec<Row>,
 }
+
+impl TransitionTable {
+    fn new(rows: Vec<Row>) -> Self {
+        Self { rows }
+    }
+    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+
+        let mut all_rows = reader.lines().flatten();
+        let mut rows: Vec<Row> = Vec::new();
+        for (index, row) in all_rows.enumerate() {
+            match Row::from_str_custom(&row, index) {
+                Ok(row) => rows.push(row),
+                _ => break,
+            }
+            // rows.push(Row::from_str_custom(&row).unwrap());
+        }
+
+        Ok(TransitionTable::new(rows))
+        // TransitionTable::new(Vec::new())
+    }
+}
+
 #[derive(Debug, Default)]
 struct Row {
     is_accepting: bool,
@@ -54,18 +80,56 @@ impl Row {
 #[cfg(test)]
 mod test {
     use crate::transition_table::Row;
+    use crate::transition_table::TransitionTable;
+
+    // tests for reading in a file
+    #[test]
+    #[should_panic]
+    fn from_file_on_nonexistent_panics_on_unwrap() {
+        TransitionTable::from_file("this_file_does_not_exist.tt").unwrap();
+    }
+
+    #[test]
+    fn two_line_valid_file() {
+        let in_file = TransitionTable::from_file("tests/two_liner.tt").unwrap();
+        assert_eq!(
+            in_file.rows,
+            vec![
+                Row::new(false, 0, vec![Some(0), None, Some(1), None]),
+                Row::new(false, 1, vec![Some(1), Some(2), None, None])
+            ]
+        );
+    }
+
+    #[test]
+    fn empty_file_test() {
+        let in_file = TransitionTable::from_file("tests/empty_file.tt").unwrap();
+        assert_eq!(in_file.rows, vec![]);
+    }
+
+    #[test]
+    fn two_line_valid_file_with_extra_lines() {
+        let in_file = TransitionTable::from_file("tests/two_liner_extra_lines.tt").unwrap();
+        assert_eq!(
+            in_file.rows,
+            vec![
+                Row::new(false, 0, vec![Some(0), None, Some(1), None]),
+                Row::new(false, 1, vec![Some(1), Some(2), None, None])
+            ]
+        );
+    }
 
     // Tests for str_parse
     #[test]
     #[should_panic]
-    fn test_empty_str_parse() {
+    fn empty_str_parse() {
         let r = Row::from_str_custom("", 0);
         r.unwrap();
     }
 
     #[test]
     #[should_panic]
-    fn test_some_invalid_str_str_parse() {
+    fn some_invalid_str_str_parse() {
         let r = Row::from_str_custom("It would not make sense to parse this", 0);
         r.unwrap();
     }
@@ -83,7 +147,7 @@ mod test {
     }
 
     #[test]
-    fn test_accepting_and_another_id() {
+    fn accepting_and_another_id() {
         let r = Row::from_str_custom("+ 1 2 E E", 2).unwrap();
         assert_eq!(r, Row::new(true, 2, vec![Some(1), Some(2), None, None]));
     }
