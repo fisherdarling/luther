@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use luther::transition_table::*;
+use luther::dfa::*;
 use structopt::StructOpt;
 
 use std::path::PathBuf;
@@ -28,5 +28,5 @@ fn main() {
 
     let temp_input_file_name = "some_tt.tt";
 
-    let transition_table = TransitionTable::from_file(&temp_input_file_name).unwrap();
+    let dfa = DFA::from_file(&temp_input_file_name).unwrap();
 }

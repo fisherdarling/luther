@@ -1,2 +1,2 @@
 pub mod scanner;
-pub mod transition_table;
+pub mod dfa;

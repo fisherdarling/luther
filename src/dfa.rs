@@ -1,18 +1,21 @@
 use std::fs::File;
+use std::path::Path;
 use std::io::{BufRead, BufReader};
-pub struct TransitionTable {
+
+pub struct DFA {
     rows: Vec<Row>,
 }
 
-impl TransitionTable {
+impl DFA {
     fn new(rows: Vec<Row>) -> Self {
         Self { rows }
     }
-    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
 
-        let mut all_rows = reader.lines().flatten();
+        let all_rows = reader.lines().flatten();
         let mut rows: Vec<Row> = Vec::new();
         for (index, row) in all_rows.enumerate() {
             match Row::from_str_custom(&row, index) {
@@ -22,8 +25,8 @@ impl TransitionTable {
             // rows.push(Row::from_str_custom(&row).unwrap());
         }
 
-        Ok(TransitionTable::new(rows))
-        // TransitionTable::new(Vec::new())
+        Ok(DFA::new(rows))
+        // DFA::new(Vec::new())
     }
 }
 
@@ -79,19 +82,18 @@ impl Row {
 
 #[cfg(test)]
 mod test {
-    use crate::transition_table::Row;
-    use crate::transition_table::TransitionTable;
+    use super::*;
 
     // tests for reading in a file
     #[test]
     #[should_panic]
     fn from_file_on_nonexistent_panics_on_unwrap() {
-        TransitionTable::from_file("this_file_does_not_exist.tt").unwrap();
+        DFA::from_file("this_file_does_not_exist.tt").unwrap();
     }
 
     #[test]
     fn two_line_valid_file() {
-        let in_file = TransitionTable::from_file("tests/two_liner.tt").unwrap();
+        let in_file = DFA::from_file("tests/two_liner.tt").unwrap();
         assert_eq!(
             in_file.rows,
             vec![
@@ -103,13 +105,13 @@ mod test {
 
     #[test]
     fn empty_file_test() {
-        let in_file = TransitionTable::from_file("tests/empty_file.tt").unwrap();
+        let in_file = DFA::from_file("tests/empty_file.tt").unwrap();
         assert_eq!(in_file.rows, vec![]);
     }
 
     #[test]
     fn two_line_valid_file_with_extra_lines() {
-        let in_file = TransitionTable::from_file("tests/two_liner_extra_lines.tt").unwrap();
+        let in_file = DFA::from_file("tests/two_liner_extra_lines.tt").unwrap();
         assert_eq!(
             in_file.rows,
             vec![
