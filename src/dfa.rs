@@ -1,7 +1,8 @@
 use std::fs::File;
-use std::path::Path;
 use std::io::{BufRead, BufReader};
+use std::path::Path;
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct DFA {
     rows: Vec<Row>,
 }
@@ -28,22 +29,30 @@ impl DFA {
         Ok(DFA::new(rows))
         // DFA::new(Vec::new())
     }
+
+    pub fn transition(&self, row: usize, letter: usize) -> Option<usize> {
+        self.rows[row].transitions()[letter]
+    }
+
+    pub fn is_accepting(&self, row: usize) -> bool {
+        self.rows[row].is_accepting()
+    }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Row {
     is_accepting: bool,
     id: usize,
     transitions: Vec<Option<usize>>, // None here represents 'E'
 }
 
-impl PartialEq for Row {
-    fn eq(&self, other: &Self) -> bool {
-        self.is_accepting == other.is_accepting
-            && self.id == other.id
-            && self.transitions == other.transitions
-    }
-}
+// impl PartialEq for Row {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.is_accepting == other.is_accepting
+//             && self.id == other.id
+//             && self.transitions == other.transitions
+//     }
+// }
 
 impl Row {
     pub fn new(is_accepting: bool, id: usize, transitions: Vec<Option<usize>>) -> Self {
@@ -54,13 +63,21 @@ impl Row {
         }
     }
 
+    pub fn transitions(&self) -> &[Option<usize>] {
+        &self.transitions
+    }
+
+    pub fn is_accepting(&self) -> bool {
+        self.is_accepting
+    }
+
     //EX: - 0 E 1 E
     //EX: - 1 2 E E
     pub fn from_str_custom(input: &str, id: usize) -> Result<Self, ()> {
         let tokens: Vec<&str> = input.trim().split_whitespace().collect();
 
         match tokens.as_slice() {
-            [accept, transitions @ ..] => {
+            [accept, row_id, transitions @ ..] => {
                 let is_accept = *accept == "+";
                 let transitions: Vec<Option<usize>> = transitions
                     .iter()

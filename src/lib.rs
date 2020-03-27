@@ -1,2 +1,3 @@
-pub mod scanner;
 pub mod dfa;
+pub mod regex;
+pub mod scanner;
