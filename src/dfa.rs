@@ -18,8 +18,8 @@ impl DFA {
 
         let all_rows = reader.lines().flatten();
         let mut rows: Vec<Row> = Vec::new();
-        for (index, row) in all_rows.enumerate() {
-            match Row::from_str_custom(&row, index) {
+        for (_, row) in all_rows.enumerate() {
+            match Row::from_str_custom(&row) {
                 Ok(row) => rows.push(row),
                 _ => break,
             }
@@ -73,7 +73,7 @@ impl Row {
 
     //EX: - 0 E 1 E
     //EX: - 1 2 E E
-    pub fn from_str_custom(input: &str, id: usize) -> Result<Self, ()> {
+    pub fn from_str_custom(input: &str) -> Result<Self, ()> {
         let tokens: Vec<&str> = input.trim().split_whitespace().collect();
 
         match tokens.as_slice() {
@@ -90,7 +90,7 @@ impl Row {
                     })
                     .collect();
 
-                Ok(Row::new(is_accept, id, transitions))
+                Ok(Row::new(is_accept, row_id.parse().unwrap(), transitions))
             }
             _ => Err(()),
         }
@@ -114,8 +114,8 @@ mod test {
         assert_eq!(
             in_file.rows,
             vec![
-                Row::new(false, 0, vec![Some(0), None, Some(1), None]),
-                Row::new(false, 1, vec![Some(1), Some(2), None, None])
+                Row::new(false, 0, vec![None, Some(1), None]),
+                Row::new(false, 1, vec![Some(2), None, None])
             ]
         );
     }
@@ -132,8 +132,8 @@ mod test {
         assert_eq!(
             in_file.rows,
             vec![
-                Row::new(false, 0, vec![Some(0), None, Some(1), None]),
-                Row::new(false, 1, vec![Some(1), Some(2), None, None])
+                Row::new(false, 0, vec![None, Some(1), None]),
+                Row::new(false, 1, vec![Some(2), None, None])
             ]
         );
     }
@@ -142,32 +142,32 @@ mod test {
     #[test]
     #[should_panic]
     fn empty_str_parse() {
-        let r = Row::from_str_custom("", 0);
+        let r = Row::from_str_custom("");
         r.unwrap();
     }
 
     #[test]
     #[should_panic]
     fn some_invalid_str_str_parse() {
-        let r = Row::from_str_custom("It would not make sense to parse this", 0);
+        let r = Row::from_str_custom("It would not make sense to parse this");
         r.unwrap();
     }
 
     #[test]
     fn good_str_for_str_parse() {
-        let r = Row::from_str_custom("- 0 E 1 E", 0).unwrap();
-        assert_eq!(r, Row::new(false, 0, vec![Some(0), None, Some(1), None]));
+        let r = Row::from_str_custom("- 0 E 1 E").unwrap();
+        assert_eq!(r, Row::new(false, 0, vec![None, Some(1), None]));
     }
 
     #[test]
     fn another_good_str_for_str_parse() {
-        let r = Row::from_str_custom("- 1 2 E E", 0).unwrap();
-        assert_eq!(r, Row::new(false, 0, vec![Some(1), Some(2), None, None]));
+        let r = Row::from_str_custom("- 1 2 E E").unwrap();
+        assert_eq!(r, Row::new(false, 1, vec![Some(2), None, None]));
     }
 
     #[test]
     fn accepting_and_another_id() {
-        let r = Row::from_str_custom("+ 1 2 E E", 2).unwrap();
-        assert_eq!(r, Row::new(true, 2, vec![Some(1), Some(2), None, None]));
+        let r = Row::from_str_custom("+ 1 2 E E").unwrap();
+        assert_eq!(r, Row::new(true, 1, vec![Some(2), None, None]));
     }
 }
