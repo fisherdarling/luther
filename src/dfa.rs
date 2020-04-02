@@ -120,6 +120,7 @@ mod test {
         );
     }
 
+    // do we want empty files to be valid?
     #[test]
     fn empty_file_test() {
         let in_file = DFA::from_file("tests/empty_file.tt").unwrap();
