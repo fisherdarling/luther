@@ -72,6 +72,7 @@ impl Scanner {
             transition_tables,
         }
     }
+
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
@@ -81,15 +82,10 @@ impl Scanner {
 
         let alphabet = Scanner::alphabet_build(&first_line);
 
-        let mut tts: Vec<TransitionTable> = Vec::new();
-
-        for (_, row) in all_rows.enumerate() {
-            match TransitionTable::from_str_custom(&row) {
-                Ok(tt) => tts.push(tt),
-                _ => break,
-            }
-            // rows.push(Row::from_str_custom(&row).unwrap());
-        }
+        let mut tts: Vec<TransitionTable> = all_rows
+            .map(|r| TransitionTable::from_str_custom(&r))
+            .flatten()
+            .collect();
 
         Ok(Scanner::new(alphabet, tts))
     }
@@ -100,27 +96,27 @@ impl Scanner {
         let mut alpha = Alphabet::new();
         let mut clean_in = String::from(input);
         clean_in.retain(|c| !c.is_whitespace());
+
         let in_chars: Vec<char> = clean_in.chars().collect();
+
         let mut char_index = 0;
         let mut i = 0;
         while i < in_chars.len() {
             if in_chars[i] == 'x' {
-                let hex_1 = in_chars[i + 1];
-                let hex_2 = in_chars[i + 2];
-                let mut hex_str = hex_1.to_string();
-                hex_str.push(hex_2);
-                i += 2;
+                let hex_str: String = in_chars[i + 1..=i + 2].iter().collect();
                 alpha.insert(Scanner::hex_to_char(&hex_str), char_index);
-                char_index += 1;
+                i += 2; // Skip the next two hex characters
             } else {
                 alpha.insert(in_chars[i], char_index);
-                char_index += 1;
             }
+            char_index += 1;
             i += 1;
         }
+
         alpha
     }
 
+    #[inline(always)]
     fn hex_to_char(hex: &str) -> char {
         let numeric_code = u8::from_str_radix(&hex, 16).unwrap();
         numeric_code as char
