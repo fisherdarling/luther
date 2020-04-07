@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
 use luther::dfa::*;
+use luther::regex::*;
+use luther::scanner::*;
 use structopt::StructOpt;
 
 use std::path::PathBuf;
@@ -28,5 +30,5 @@ fn main() {
 
     let temp_input_file_name = "some_tt.tt";
 
-    let dfa = DFA::from_file(&temp_input_file_name).unwrap();
+    let scanner_def = Scanner::from_file("wiki/scan.u").unwrap();
 }

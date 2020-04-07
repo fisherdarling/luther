@@ -72,7 +72,6 @@ impl Scanner {
             transition_tables,
         }
     }
-
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
