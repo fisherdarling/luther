@@ -28,7 +28,7 @@ impl Driver {
     }
 
     pub fn make_output(regexs: &Vec<Regex>, src_lines_as_str: &mut String) -> String {
-        let output_line = String::new();
+        let mut output_line = String::new();
         let best_match = &regexs[0];
         let best_match_len = best_match.first_match(src_lines_as_str).unwrap(); // TODO What do we do in the case that nothing matches? I guess panic? IGNORE should deal with this
         let remaining_str = src_lines_as_str.split_off(best_match_len);
