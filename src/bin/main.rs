@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use luther::dfa::*;
+use luther::driver::*;
 use luther::regex::*;
 use luther::scanner::*;
 use structopt::StructOpt;
@@ -30,5 +31,7 @@ fn main() {
 
     let temp_input_file_name = "some_tt.tt";
 
-    let scanner_def = Scanner::from_file("wiki/scan.u").unwrap();
+    let scanner_def = Scanner::from_file(args.definition).unwrap();
+
+    Driver::run(scanner_def, args.source, args.output);
 }

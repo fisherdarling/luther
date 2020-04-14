@@ -8,8 +8,8 @@ type State = usize;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Regex<'d, 'a, 't> {
-    dfa: &'d DFA,
-    token: Option<&'t str>,
+    pub dfa: &'d DFA,
+    pub token: Option<&'t str>,
     alphabet: &'a Alphabet,
     state: Cell<Option<usize>>,
     length: Cell<usize>,

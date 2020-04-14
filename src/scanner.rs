@@ -20,10 +20,11 @@ type State = usize;
 /// tt is the dfa created by the file name
 /// id is the name in the middle
 /// replace_with is the optional replace with value
+#[derive(Debug)]
 pub struct TransitionTable {
-    tt: DFA,
-    id: String,
-    replace_with: Option<String>,
+    pub tt: DFA, // TODO should probably make getters for these instead of making them pub
+    pub id: String,
+    pub replace_with: Option<String>,
 }
 
 impl TransitionTable {
@@ -71,6 +72,12 @@ impl Scanner {
             alpha,
             transition_tables,
         }
+    }
+    pub fn get_alpha(&self) -> Alphabet {
+        self.alpha.clone()
+    }
+    pub fn get_trans(&self) -> &Vec<TransitionTable> {
+        &self.transition_tables
     }
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
