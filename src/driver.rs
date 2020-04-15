@@ -4,6 +4,8 @@ use crate::alphabet_translator::alphabet_translator::char_to_hex_a_string;
 use crate::regex::Regex;
 use crate::scanner::Scanner;
 use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::path::PathBuf;
@@ -12,9 +14,15 @@ pub struct Driver {
 }
 
 impl Driver {
-    pub fn run(scanner: Scanner, src_file: PathBuf, _out: Option<PathBuf>) {
+    pub fn run(scanner: Scanner, src_file: PathBuf, out_path: PathBuf) {
         let mut src_lines_as_str = crate::driver::Driver::build_source_vecs(src_file).unwrap(); // TODO fix the crate path
 
+        let mut output_file = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .append(true)
+            .open(out_path)
+            .unwrap();
         let mut regxs: Vec<Regex> = Vec::new();
         let alpha = scanner.get_alpha();
         let trans = scanner.get_trans();
@@ -49,13 +57,15 @@ impl Driver {
             }
             line_number += num_newlines;
             let hex_encoded_output = char_to_hex_a_string(&src_lines_as_str[..longest].to_string());
-            println!(
+            let line = format!(
                 "{} {} {} {}",
                 regex_id,
                 regex_replace_value.unwrap_or(&hex_encoded_output),
                 prev_line,
                 previos_pos
             );
+            println!("{}", line);
+            writeln!(output_file, "{}", line);
             prev_line = line_number;
             if num_newlines == 0 {
                 previos_pos += longest;

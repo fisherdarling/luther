@@ -23,7 +23,7 @@ pub struct Args {
 
     /// Path to an output file for storing the tokenized source. Stdout if not present.
     #[structopt(parse(from_os_str))]
-    output: Option<PathBuf>,
+    output: PathBuf,
 }
 fn main() {
     let args = Args::from_args();
