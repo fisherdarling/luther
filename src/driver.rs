@@ -21,7 +21,11 @@ impl Driver {
         //println!("{}", src_lines_as_str);
         // Create all regexs
         for t in trans {
-            regxs.push(Regex::new(&t.tt, Some(&t.id), &alpha));
+            let replace_value = match &t.replace_with {
+                None => None,
+                Some(t) => Some(t.to_string()),
+            };
+            regxs.push(Regex::new(&t.tt, Some(&t.id), &alpha, replace_value));
         }
 
         let mut line_number = 1;
@@ -32,6 +36,7 @@ impl Driver {
             let mut longest = 0;
             let mut num_newlines = 0;
             let mut regex_id = "";
+            let mut regex_replace_value: Option<&String> = None;
             for r in regxs.iter() {
                 let (length, newlines, char_number) = r.first_match(src_lines_as_str.as_str());
                 if length > longest {
@@ -39,13 +44,17 @@ impl Driver {
                     longest = length;
                     position = char_number;
                     regex_id = r.token.unwrap();
+                    regex_replace_value = r.replace_with.as_ref();
                 }
             }
             line_number += num_newlines;
             let hex_encoded_output = char_to_hex_a_string(&src_lines_as_str[..longest].to_string());
             println!(
                 "{} {} {} {}",
-                regex_id, hex_encoded_output, prev_line, previos_pos
+                regex_id,
+                regex_replace_value.unwrap_or(&hex_encoded_output),
+                prev_line,
+                previos_pos
             );
             prev_line = line_number;
             if num_newlines == 0 {

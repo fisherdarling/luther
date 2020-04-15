@@ -11,16 +11,23 @@ pub struct Regex<'d, 'a, 't> {
     pub dfa: &'d DFA,
     pub token: Option<&'t str>,
     alphabet: &'a Alphabet,
+    pub replace_with: Option<String>,
     state: Cell<Option<usize>>,
     length: Cell<usize>,
 }
 
 impl<'d, 'a, 't> Regex<'d, 'a, 't> {
-    pub fn new(dfa: &'d DFA, token: Option<&'t str>, alphabet: &'a Alphabet) -> Self {
+    pub fn new(
+        dfa: &'d DFA,
+        token: Option<&'t str>,
+        alphabet: &'a Alphabet,
+        replace_with: Option<String>,
+    ) -> Self {
         Self {
             dfa,
             token,
             alphabet,
+            replace_with,
             state: Cell::new(Some(0)),
             length: Cell::new(0),
         }
@@ -136,7 +143,7 @@ pub mod tests {
         assert_eq!(regex.first_match("pqo"), (2, 0, 2));
         assert_eq!(regex.first_match("rspqo"), (4, 0, 4));
         assert_eq!(regex.first_match("oprqs"), (0, 0, 0));
-        assert_eq!(regex.first_match("owdadfqdasdwa"), (0,0,0));
+        assert_eq!(regex.first_match("owdadfqdasdwa"), (0, 0, 0));
     }
 
     #[test]
@@ -170,9 +177,9 @@ pub mod tests {
         assert_eq!(regex.first_match("roposq"), (6, 0, 6));
         assert_eq!(regex.first_match("oprsq"), (5, 0, 5));
 
-        assert_eq!(regex.first_match("sprqo"), (0,0,0));
-        assert_eq!(regex.first_match("p"), (0,0,0));
-        assert_eq!(regex.first_match("r"), (0,0,0));
+        assert_eq!(regex.first_match("sprqo"), (0, 0, 0));
+        assert_eq!(regex.first_match("p"), (0, 0, 0));
+        assert_eq!(regex.first_match("r"), (0, 0, 0));
     }
 
     #[test]
@@ -187,8 +194,8 @@ pub mod tests {
         assert_eq!(regex.first_match("qpq rrr qpr"), (8, 0, 8));
         assert_eq!(regex.first_match("pppp  rrrp qpr"), (11, 0, 11));
 
-        assert_eq!(regex.first_match("pppp o qpr"), (0,0,0));
-        assert_eq!(regex.first_match("p"), (0,0,0));
-        assert_eq!(regex.first_match("q p"), (0,0,0));
+        assert_eq!(regex.first_match("pppp o qpr"), (0, 0, 0));
+        assert_eq!(regex.first_match("p"), (0, 0, 0));
+        assert_eq!(regex.first_match("q p"), (0, 0, 0));
     }
 }
