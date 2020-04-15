@@ -36,18 +36,18 @@ impl Driver {
                 if length > longest {
                     num_newlines = newlines;
                     longest = length;
-                    if num_newlines > 0 {
-                        position = char_number;
-                    } else {
-                        position += length;
-                    }
+                    position = char_number;
                     regex_id = r.token.unwrap();
                 }
             }
             line_number += num_newlines;
             println!("{} {} {} {}", regex_id, src_lines_as_str[..longest].to_string(), prev_line, previos_pos);
             prev_line = line_number;
-            previos_pos = position;
+            if num_newlines == 0 {
+                previos_pos += longest;
+            } else {
+                previos_pos = position;
+            }
             src_lines_as_str = src_lines_as_str[longest..].to_string();  // chop off what we tokenized
             if src_lines_as_str.len() == 0{
                 break;
