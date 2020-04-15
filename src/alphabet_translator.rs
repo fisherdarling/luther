@@ -16,11 +16,32 @@ pub mod alphabet_translator {
         temp.push_str(&hex_code);
         temp
     }
+
+    // TODO probably could do this with some sort of collect and map
+    pub fn char_to_hex_a_string(input: &str) -> String {
+        let mut temp = String::new();
+        for c in input.chars() {
+            temp.push_str(&char_to_hex(c))
+        }
+        temp
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::alphabet_translator::alphabet_translator;
+
+    #[test]
+    fn trans_with_wacks() {
+        assert_eq!(
+            "x61x62x5Cx61x62",
+            alphabet_translator::char_to_hex_a_string("ab\\ab")
+        );
+    }
+    #[test]
+    fn simple_str_trans() {
+        assert_eq!("x61x62", alphabet_translator::char_to_hex_a_string("ab"));
+    }
 
     #[test]
     fn a_char() {

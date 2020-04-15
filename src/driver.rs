@@ -1,5 +1,6 @@
 use crate::dfa::DFA;
 // use crate::driver::Driver;
+use crate::alphabet_translator::alphabet_translator::char_to_hex_a_string;
 use crate::regex::Regex;
 use crate::scanner::Scanner;
 use std::fs::File;
@@ -41,15 +42,19 @@ impl Driver {
                 }
             }
             line_number += num_newlines;
-            println!("{} {} {} {}", regex_id, src_lines_as_str[..longest].to_string(), prev_line, previos_pos);
+            let hex_encoded_output = char_to_hex_a_string(&src_lines_as_str[..longest].to_string());
+            println!(
+                "{} {} {} {}",
+                regex_id, hex_encoded_output, prev_line, previos_pos
+            );
             prev_line = line_number;
             if num_newlines == 0 {
                 previos_pos += longest;
             } else {
                 previos_pos = position;
             }
-            src_lines_as_str = src_lines_as_str[longest..].to_string();  // chop off what we tokenized
-            if src_lines_as_str.len() == 0{
+            src_lines_as_str = src_lines_as_str[longest..].to_string(); // chop off what we tokenized
+            if src_lines_as_str.len() == 0 {
                 break;
             }
         }
