@@ -135,7 +135,7 @@ pub mod tests {
         let alpha = Alphabet::from_iter(ALPHABET.iter().copied());
         let dfa = DFA::from_file("./wiki/noto.tt").unwrap();
 
-        let regex = Regex::new(&dfa, None, &alpha);
+        let regex = Regex::new(&dfa, None, &alpha, None);
 
         assert!(regex.full_match("pqrs"));
 
@@ -151,7 +151,7 @@ pub mod tests {
         let alpha = Alphabet::from_iter(ALPHABET.iter().copied());
         let dfa = DFA::from_file("./wiki/nots.tt").unwrap();
 
-        let regex = Regex::new(&dfa, None, &alpha);
+        let regex = Regex::new(&dfa, None, &alpha, None);
 
         assert!(regex.full_match("pqro"));
 
@@ -167,7 +167,7 @@ pub mod tests {
         let alpha = Alphabet::from_iter(ALPHABET.iter().copied());
         let dfa = DFA::from_file("./wiki/endsq.tt").unwrap();
 
-        let regex = Regex::new(&dfa, None, &alpha);
+        let regex = Regex::new(&dfa, None, &alpha, None);
 
         assert!(regex.full_match("prsprssprq"));
 
@@ -186,7 +186,7 @@ pub mod tests {
     fn twosmallwords() {
         let alpha = Alphabet::from_iter(ALPHABET.iter().copied());
         let dfa = DFA::from_file("./wiki/twosmallwords.tt").unwrap();
-        let regex = Regex::new(&dfa, None, &alpha);
+        let regex = Regex::new(&dfa, None, &alpha, None);
 
         assert!(regex.full_match("opqr opqr "));
         assert!(regex.full_match("opqr  opqr "));
