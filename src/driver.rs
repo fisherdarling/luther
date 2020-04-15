@@ -17,17 +17,48 @@ impl Driver {
         let mut regxs: Vec<Regex> = Vec::new();
         let alpha = scanner.get_alpha();
         let trans = scanner.get_trans();
-        let test_token = Some("This is a input stream");
+        //println!("{}", src_lines_as_str);
+        // Create all regexs
         for t in trans {
-            // println!("{:#?}", t);
             regxs.push(Regex::new(&t.tt, Some(&t.id), &alpha));
         }
-        crate::driver::Driver::find_longest_match(&mut regxs, &src_lines_as_str);
 
-        crate::driver::Driver::make_output(&regxs, &mut src_lines_as_str);
+        let mut line_number = 1;
+        let mut position = 1;
+        let mut previos_pos = 1;
+        let mut prev_line = 1;
+        loop {
+            let mut longest = 0;
+            let mut num_newlines = 0;
+            let mut regex_id = "";
+            for r in regxs.iter() {
+                let (length, newlines, char_number) = r.first_match(src_lines_as_str.as_str());
+                if length > longest {
+                    num_newlines = newlines;
+                    longest = length;
+                    if num_newlines > 0 {
+                        position = char_number;
+                    } else {
+                        position += length;
+                    }
+                    regex_id = r.token.unwrap();
+                }
+            }
+            line_number += num_newlines;
+            println!("{} {} {} {}", regex_id, src_lines_as_str[..longest].to_string(), prev_line, previos_pos);
+            prev_line = line_number;
+            previos_pos = position;
+            src_lines_as_str = src_lines_as_str[longest..].to_string();  // chop off what we tokenized
+            if src_lines_as_str.len() == 0{
+                break;
+            }
+        }
+
+        //let crate::driver::Driver::make_output(&regxs, &mut src_lines_as_str);
+        //println!("{}", str_ohea);
     }
 
-    pub fn make_output(regexs: &Vec<Regex>, src_lines_as_str: &mut String) -> String {
+    /*pub fn make_output(regexs: &Vec<Regex>, src_lines_as_str: &mut String) -> String {
         let mut output_line = String::new();
         let best_match = &regexs[0];
         let best_match_len = best_match.first_match(src_lines_as_str).unwrap(); // TODO What do we do in the case that nothing matches? I guess panic? IGNORE should deal with this
@@ -45,7 +76,7 @@ impl Driver {
                 .unwrap_or(0)
                 .cmp(&r1.first_match(&src_lines_as_str).unwrap_or(0))
         });
-    }
+    }*/
 
     pub fn build_source_vecs(path: PathBuf) -> Result<String, Box<dyn std::error::Error>> {
         // TODO replace this with std::fs::read_to_string()

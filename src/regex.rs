@@ -26,6 +26,7 @@ impl<'d, 'a, 't> Regex<'d, 'a, 't> {
         }
     }
 
+    // takes in a letter and returns what state we end up at
     fn accept(&self, letter: char) -> Option<State> {
         if let Some(current_state) = self.state.take() {
             let char_index = self.alphabet[&letter];
@@ -53,34 +54,39 @@ impl<'d, 'a, 't> Regex<'d, 'a, 't> {
         self.dfa.is_accepting(state)
     }
 
-    pub fn len(&self) -> Option<usize> {
-        Some(self.length.get())
+    pub fn len(&self) -> usize {
+        self.length.get()
     }
 
-    pub fn first_match(&self, input: &str) -> Option<usize> {
+    // returns the length of the longest match
+    pub fn first_match(&self, input: &str) -> (usize, usize, usize) {
         let mut chars = input.chars();
-        let mut prev_state = None;
+        let mut length = 0;
+        let mut num_newlines = 0;
+        let mut position = 1;
+        let mut final_pos = 1;
+        let mut newlines = 0;
 
         while let Some(letter) = chars.next() {
             if let Some(next_state) = self.accept(letter) {
-                prev_state = Some(next_state);
+                position += 1;
+                if letter == '\n' {
+                    newlines += 1;
+                    position = 1;
+                }
+                if self.does_accept(next_state) {
+                    length = self.len();
+                    num_newlines += newlines;
+                    final_pos = position;
+                    newlines = 0;
+                }
             } else {
                 break;
             }
         }
-
-        let result = if let Some(prev_state) = prev_state {
-            if self.does_accept(prev_state) {
-                self.len()
-            } else {
-                None
-            }
-        } else {
-            None
-        };
         self.reset();
 
-        result
+        (length, num_newlines, final_pos)
     }
 
     pub fn full_match(&self, input: &str) -> bool {
@@ -126,11 +132,11 @@ pub mod tests {
 
         assert!(regex.full_match("pqrs"));
 
-        assert_eq!(regex.first_match("poo"), Some(1));
-        assert_eq!(regex.first_match("pqo"), Some(2));
-        assert_eq!(regex.first_match("rspqo"), Some(4));
-        assert_eq!(regex.first_match("oprqs"), None);
-        assert_eq!(regex.first_match("owdadfqdasdwa"), None);
+        assert_eq!(regex.first_match("poo"), (1, 0, 1));
+        assert_eq!(regex.first_match("pqo"), (2, 0, 2));
+        assert_eq!(regex.first_match("rspqo"), (4, 0, 4));
+        assert_eq!(regex.first_match("oprqs"), (0, 0, 0));
+        assert_eq!(regex.first_match("owdadfqdasdwa"), (0,0,0));
     }
 
     #[test]
@@ -142,11 +148,11 @@ pub mod tests {
 
         assert!(regex.full_match("pqro"));
 
-        assert_eq!(regex.first_match("pss"), Some(1));
-        assert_eq!(regex.first_match("pqs"), Some(2));
-        assert_eq!(regex.first_match("ropqs"), Some(4));
-        assert_eq!(regex.first_match("sprqo"), None);
-        assert_eq!(regex.first_match("swdadfqdasdwa"), None);
+        assert_eq!(regex.first_match("pss"), (1, 0, 1));
+        assert_eq!(regex.first_match("pqs"), (2, 0, 2));
+        assert_eq!(regex.first_match("ropqs"), (4, 0, 4));
+        assert_eq!(regex.first_match("sprqo"), (0, 0, 0));
+        assert_eq!(regex.first_match("swdadfqdasdwa"), (0, 0, 0));
     }
 
     #[test]
@@ -158,15 +164,15 @@ pub mod tests {
 
         assert!(regex.full_match("prsprssprq"));
 
-        assert_eq!(regex.first_match("q"), Some(1));
-        assert_eq!(regex.first_match("pssq"), Some(4));
-        assert_eq!(regex.first_match("prqqqqq"), Some(7));
-        assert_eq!(regex.first_match("roposq"), Some(6));
-        assert_eq!(regex.first_match("oprsq"), Some(5));
+        assert_eq!(regex.first_match("q"), (1, 0, 1));
+        assert_eq!(regex.first_match("pssq"), (4, 0, 4));
+        assert_eq!(regex.first_match("prqqqqq"), (7, 0, 7));
+        assert_eq!(regex.first_match("roposq"), (6, 0, 6));
+        assert_eq!(regex.first_match("oprsq"), (5, 0, 5));
 
-        assert_eq!(regex.first_match("sprqo"), None);
-        assert_eq!(regex.first_match("p"), None);
-        assert_eq!(regex.first_match("r"), None);
+        assert_eq!(regex.first_match("sprqo"), (0,0,0));
+        assert_eq!(regex.first_match("p"), (0,0,0));
+        assert_eq!(regex.first_match("r"), (0,0,0));
     }
 
     #[test]
@@ -178,11 +184,11 @@ pub mod tests {
         assert!(regex.full_match("opqr opqr "));
         assert!(regex.full_match("opqr  opqr "));
         assert!(regex.full_match("opqr opq "));
-        assert_eq!(regex.first_match("qpq rrr qpr"), Some(8));
-        assert_eq!(regex.first_match("pppp  rrrp qpr"), Some(11));
+        assert_eq!(regex.first_match("qpq rrr qpr"), (8, 0, 8));
+        assert_eq!(regex.first_match("pppp  rrrp qpr"), (11, 0, 11));
 
-        assert_eq!(regex.first_match("pppp o qpr"), None);
-        assert_eq!(regex.first_match("p"), None);
-        assert_eq!(regex.first_match("q p"), None);
+        assert_eq!(regex.first_match("pppp o qpr"), (0,0,0));
+        assert_eq!(regex.first_match("p"), (0,0,0));
+        assert_eq!(regex.first_match("q p"), (0,0,0));
     }
 }
