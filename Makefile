@@ -1,7 +1,7 @@
 build:
 	rustup override set nightly
 	cargo build --release --bin LUTHER;
-	@cp ./target/debug/LUTHER ./LUTHER;
+	@cp ./target/release/LUTHER ./LUTHER;
 	@chmod +x ./LUTHER
 
 clean:
