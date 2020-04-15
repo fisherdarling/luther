@@ -1,3 +1,4 @@
+use crate::alphabet_translator::alphabet_translator;
 use crate::dfa::*;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -110,7 +111,7 @@ impl Scanner {
         while i < in_chars.len() {
             if in_chars[i] == 'x' {
                 let hex_str: String = in_chars[i + 1..=i + 2].iter().collect();
-                alpha.insert(Scanner::hex_to_char(&hex_str), char_index);
+                alpha.insert(alphabet_translator::hex_to_char(&hex_str), char_index);
                 i += 2; // Skip the next two hex characters
             } else {
                 alpha.insert(in_chars[i], char_index);
@@ -120,12 +121,6 @@ impl Scanner {
         }
 
         alpha
-    }
-
-    #[inline(always)]
-    fn hex_to_char(hex: &str) -> char {
-        let numeric_code = u8::from_str_radix(&hex, 16).unwrap();
-        numeric_code as char
     }
 }
 
@@ -225,26 +220,6 @@ mod test {
     }
 
     // hex to char
-
-    #[test]
-    fn a_hex() {
-        assert_eq!('a', Scanner::hex_to_char("61"));
-    }
-
-    #[test]
-    fn space_hex() {
-        assert_eq!(' ', Scanner::hex_to_char("20"));
-    }
-
-    #[test]
-    fn newline_hex() {
-        assert_eq!('\n', Scanner::hex_to_char("0a"));
-    }
-
-    #[test]
-    fn wack_hex() {
-        assert_eq!('\\', Scanner::hex_to_char("5C"));
-    }
 
     // transition tables from str
     #[test]
