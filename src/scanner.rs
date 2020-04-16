@@ -43,7 +43,7 @@ impl TransitionTable {
             [file_name, id] => {
                 // if replace_with.
                 Ok(TransitionTable::new(
-                    DFA::from_file(file_name).unwrap(),
+                    DFA::from_file(file_name).unwrap_or_else(|_| std::process::exit(2)),
                     id.to_string(),
                     None,
                 ))
@@ -51,7 +51,7 @@ impl TransitionTable {
             [file_name, id, replace_with] => {
                 // if replace_with.
                 Ok(TransitionTable::new(
-                    DFA::from_file(file_name).unwrap(),
+                    DFA::from_file(file_name).unwrap_or_else(|_| std::process::exit(3)),
                     id.to_string(),
                     Some(replace_with.to_string()),
                 ))
@@ -63,13 +63,15 @@ impl TransitionTable {
 
 /// Main struct for a scan definition file.
 pub struct Scanner {
+    pub newline: char,
     alpha: Alphabet,
     transition_tables: Vec<TransitionTable>,
 }
 
 impl Scanner {
-    pub fn new(alpha: Alphabet, transition_tables: Vec<TransitionTable>) -> Self {
+    pub fn new(newline: char, alpha: Alphabet, transition_tables: Vec<TransitionTable>) -> Self {
         Self {
+            newline,
             alpha,
             transition_tables,
         }
@@ -85,32 +87,34 @@ impl Scanner {
         let reader = BufReader::new(file);
 
         let mut all_rows = reader.lines().flatten();
-        let first_line = all_rows.next().unwrap();
+        // Empty Scanners are errors.
+        let first_line = all_rows.next().unwrap_or_else(|| std::process::exit(5));
 
-        let alphabet = Scanner::alphabet_build(&first_line);
+        let (alphabet, newline) = Scanner::alphabet_build(&first_line);
 
         let mut tts: Vec<TransitionTable> = all_rows
             .map(|r| TransitionTable::from_str_custom(&r))
             .flatten()
             .collect();
 
-        Ok(Scanner::new(alphabet, tts))
+        Ok(Scanner::new(newline, alphabet, tts))
     }
 
     /// Alphabet comes in with xHH for control chars, we need
     /// to turn it into real chars
-    fn alphabet_build(input: &str) -> Alphabet {
+    fn alphabet_build(input: &str) -> (Alphabet, char) {
         let mut alpha = Alphabet::new();
         let mut clean_in = String::from(input);
         clean_in.retain(|c| !c.is_whitespace());
 
         let in_chars: Vec<char> = clean_in.chars().collect();
-
+        let mut chars = vec![];
         let mut char_index = 0;
         let mut i = 0;
         while i < in_chars.len() {
             if in_chars[i] == 'x' {
                 let hex_str: String = in_chars[i + 1..=i + 2].iter().collect();
+                chars.push(alphabet_translator::hex_to_char(&hex_str));
                 alpha.insert(alphabet_translator::hex_to_char(&hex_str), char_index);
                 i += 2; // Skip the next two hex characters
             } else {
@@ -120,7 +124,7 @@ impl Scanner {
             i += 1;
         }
 
-        alpha
+        (alpha, chars[0])
     }
 }
 
@@ -176,7 +180,7 @@ mod test {
     fn one_char_alphabet() {
         let mut b = Alphabet::new();
         b.insert('a', 0);
-        assert_eq!(Scanner::alphabet_build("a"), b);
+        assert_eq!(Scanner::alphabet_build("a").0, b);
     }
 
     #[test]
@@ -184,14 +188,14 @@ mod test {
         let mut b = Alphabet::new();
         b.insert('a', 0);
         b.insert('b', 1);
-        assert_eq!(Scanner::alphabet_build("ab"), b);
+        assert_eq!(Scanner::alphabet_build("ab").0, b);
     }
 
     #[test]
     fn new_line_alphabet() {
         let mut b = Alphabet::new();
         b.insert('\n', 0);
-        assert_eq!(Scanner::alphabet_build("x0a"), b);
+        assert_eq!(Scanner::alphabet_build("x0a").0, b);
     }
 
     #[test]
@@ -200,7 +204,7 @@ mod test {
         b.insert('\n', 0);
         b.insert(' ', 1);
         b.insert('\\', 2);
-        assert_eq!(Scanner::alphabet_build("x0ax20x5C"), b);
+        assert_eq!(Scanner::alphabet_build("x0ax20x5C"), (b, '\n'));
     }
 
     #[test]
@@ -216,7 +220,7 @@ mod test {
         b.insert('q', 5);
         b.insert('r', 6);
         b.insert('s', 7);
-        assert_eq!(Scanner::alphabet_build("x0ax20x5C x6fpqrx73"), b);
+        assert_eq!(Scanner::alphabet_build("x0ax20x5C x6fpqrx73"), (b, '\n'));
     }
 
     // hex to char

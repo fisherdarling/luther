@@ -27,11 +27,10 @@ pub struct Args {
 }
 fn main() {
     let args = Args::from_args();
-    println!("{:?}", args);
 
     let temp_input_file_name = "some_tt.tt";
 
-    let scanner_def = Scanner::from_file(args.definition).unwrap();
+    let scanner_def = Scanner::from_file(args.definition).unwrap_or_else(|_| std::process::exit(1));
 
     Driver::run(scanner_def, args.source, args.output);
 }
